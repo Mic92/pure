@@ -126,25 +126,29 @@ prompt_pure_preprompt_render() {
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=$prompt_pure_colors[git:branch:cached]
 
 	# Initialize the preprompt array.
-	local -a preprompt_parts
+	local -a preprompt_parts git_info
 
 	# Set the path.
-	preprompt_parts+=('%F{${prompt_pure_colors[path]}}%~%f')
+	preprompt_parts+=('╭─%F{blue}[%F{yellow}%~%f%F{blue}]')
 
 	# Add Git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
 	if [[ -n $prompt_pure_vcs_info[branch] ]]; then
-		preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f')
-	fi
-	# Git pull/push arrows.
-	if [[ -n $prompt_pure_git_arrows ]]; then
-		preprompt_parts+=('%F{$prompt_pure_colors[git:arrow]}${prompt_pure_git_arrows}%f')
+		git_info="%F{blue}[%F{yellow}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f'
+
+		# Git pull/push arrows.
+		if [[ -n $prompt_pure_git_arrows ]]; then
+			git_info+='%F{cyan}${prompt_pure_git_arrows}%f'
+		fi
+
+		git_info+='%F{blue}]'
+		preprompt_parts+=($git_info)
 	fi
 
 	# Username and machine, if applicable.
-	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=($prompt_pure_state[username])
+	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=('%F{blue}${prompt_pure_state[username]}%F{blue}')
 	# Execution time.
-	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{$prompt_pure_colors[execution_time]}${prompt_pure_cmd_exec_time}%f')
+	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{blue}[%F{yellow}${prompt_pure_cmd_exec_time}%f%F{blue}]')
 
 	[[ -n $NIX_RUN_ARGS ]] && preprompt_parts+=('─%F{blue}[%F{yellow}${NIX_RUN_ARGS}%F{blue}]')
 
@@ -160,7 +164,7 @@ prompt_pure_preprompt_render() {
 	# Construct the new prompt with a clean preprompt.
 	local -ah ps1
 	ps1=(
-		${(j. .)preprompt_parts}  # Join parts, space separated.
+		${(j.%F{reset_color}─.)preprompt_parts}  # Join parts, space separated.
 		$prompt_newline           # Separate preprompt and prompt.
 		$cleaned_ps1
 	)
@@ -389,7 +393,7 @@ prompt_pure_async_refresh() {
 	if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# Check check if there is anything to pull.
-		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1}
+		#async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1}
 	fi
 }
 
@@ -580,12 +584,11 @@ prompt_pure_state_setup() {
 		unset MATCH MBEGIN MEND
 	fi
 
-	hostname='%F{$prompt_pure_colors[host]}@%m%f'
-	# Show `username@host` if logged in through SSH.
-	[[ -n $ssh_connection ]] && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
+	# show username@host if logged in through SSH
+	[[ -n $ssh_connection ]] && username='%F{cyan}%n%F{reset_color}@%F{yellow}%m%f'
 
-	# Show `username@host` if root, with username in default color.
-	[[ $UID -eq 0 ]] && username='%F{$prompt_pure_colors[user:root]}%n%f'"$hostname"
+	# show username@host if root, with username in white
+	[[ $UID -eq 0 ]] && username='%F{red}%n%f%F{reset_color}@%F{yellow}%m%f'
 
 	typeset -gA prompt_pure_state
 	prompt_pure_state[version]="1.10.3"
@@ -701,7 +704,7 @@ prompt_pure_setup() {
 	PROMPT='%(12V.%F{$prompt_pure_colors[virtualenv]}%12v%f .)'
 
 	# Prompt turns red if the previous command didn't exit with 0.
-	PROMPT+='%(?.%F{$prompt_pure_colors[prompt:success]}.%F{$prompt_pure_colors[prompt:error]})${prompt_pure_state[prompt]}%f '
+	PROMPT+='%F{reset_color}╰─ %(?.%F{green}.%F{red})${prompt_pure_state[prompt]}%f '
 
 	# Indicate continuation prompt by … and use a darker color for it.
 	PROMPT2='%F{242}%_… %f%(?.%F{magenta}.%F{red})${prompt_pure_state[prompt]}%f '
