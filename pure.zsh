@@ -146,6 +146,8 @@ prompt_pure_preprompt_render() {
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{$prompt_pure_colors[execution_time]}${prompt_pure_cmd_exec_time}%f')
 
+	[[ -n $NIX_RUN_ARGS ]] && preprompt_parts+=('─%F{blue}[%F{yellow}${NIX_RUN_ARGS}%F{blue}]')
+
 	local cleaned_ps1=$PROMPT
 	local -H MATCH MBEGIN MEND
 	if [[ $PROMPT = *$prompt_newline* ]]; then
