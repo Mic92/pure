@@ -137,19 +137,19 @@ prompt_pure_preprompt_render() {
 	fi
 
 	# Username and machine, if applicable.
-	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=($prompt_pure_state[username])
+	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=("%F{blue}[${prompt_pure_state[username]}%F{blue}]%f")
 
 	# Set the path.
-	preprompt_parts+=('%F{${prompt_pure_colors[path]}}%~%f')
+	preprompt_parts+=('%F{blue}[%F{${prompt_pure_colors[path]}}%~%F{blue}]%f')
 
 	# Git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
 	if [[ -n $prompt_pure_vcs_info[branch] ]]; then
-		preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}'"%F{$git_dirty_color}"'${prompt_pure_git_dirty}%f')
+		preprompt_parts+=("%F{blue}[%F{$git_color}"'${prompt_pure_vcs_info[branch]}'"%F{$git_dirty_color}"'${prompt_pure_git_dirty}%F{blue}]%f')
 	fi
 	# Git action (for example, merge).
 	if [[ -n $prompt_pure_vcs_info[action] ]]; then
-		preprompt_parts+=("%F{$prompt_pure_colors[git:action]}"'$prompt_pure_vcs_info[action]%f')
+		preprompt_parts+=("%F{blue}[%F{$prompt_pure_colors[git:action]}"'$prompt_pure_vcs_info[action]%F{blue}]%f')
 	fi
 	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
@@ -160,8 +160,10 @@ prompt_pure_preprompt_render() {
 		preprompt_parts+=('%F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f')
 	fi
 
+	[[ -n $NIX_RUN_ARGS ]] && preprompt_parts+=('─%F{blue}[%F{yellow}${NIX_RUN_ARGS}%F{blue}]')
+
 	# Execution time.
-	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{$prompt_pure_colors[execution_time]}${prompt_pure_cmd_exec_time}%f')
+	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{blue}[%F{$prompt_pure_colors[execution_time]}${prompt_pure_cmd_exec_time}%F{blue}]%f')
 
 	local cleaned_ps1=$PROMPT
 	local -H MATCH MBEGIN MEND
@@ -175,7 +177,8 @@ prompt_pure_preprompt_render() {
 	# Construct the new prompt with a clean preprompt.
 	local -ah ps1
 	ps1=(
-		${(j. .)preprompt_parts}  # Join parts, space separated.
+		%F{blue}╭─
+		${(j.─.)preprompt_parts}  # Join parts, ─ separated.
 		$prompt_newline           # Separate preprompt and prompt.
 		$cleaned_ps1
 	)
